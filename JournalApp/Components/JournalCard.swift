@@ -30,6 +30,9 @@ struct JournalCard: View {
             Text(entry.content)
                 .font(.bodyM)
                 .foregroundStyle(Color.textPrimary)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.appCard, in: RoundedRectangle(cornerRadius: 28))
         }
     }
 }

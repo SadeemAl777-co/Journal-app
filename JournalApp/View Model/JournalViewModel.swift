@@ -3,39 +3,79 @@ import Observation
 
 @Observable
 class JournalViewModel {
-    var entries: [JournalEntry] = []
+    // Data
+    private(set) var entries: [JournalEntry]
 
-    private let storageKey = "journalEntries"
+    // Screen state
+    var searchText = ""
+    var filter: JournalFilter?
+    var isAddingEntry = false
+    var entryToEdit: JournalEntry?
+    var entryToDelete: JournalEntry?
+    var isShowingDeleteAlert = false
 
-    init() {
-        load()
+    private let storage: JournalStorage
+
+    init(storage: JournalStorage = JournalStorage()) {
+        self.storage = storage
+        self.entries = storage.load()
     }
 
+    // MARK: - What the screen shows
+    var visibleEntries: [JournalEntry] {
+        let searched = entries.filter { $0.matches(searchText) }
+        return filter?.apply(to: searched) ?? searched
+    }
+
+    var hasNoEntries: Bool {
+        entries.isEmpty
+    }
+
+    var hasNoSearchResults: Bool {
+        !entries.isEmpty && visibleEntries.isEmpty
+    }
+
+    // MARK: - Opening screens
+    func startAdding() {
+        isAddingEntry = true
+    }
+
+    func startEditing(_ entry: JournalEntry) {
+        entryToEdit = entry
+    }
+
+    func requestDelete(_ entry: JournalEntry) {
+        entryToDelete = entry
+        isShowingDeleteAlert = true
+    }
+
+    func toggleFilter(_ option: JournalFilter) {
+        filter = (filter == option) ? nil : option
+    }
+
+    // MARK: - Changing data
     func add(title: String, content: String) {
         entries.insert(JournalEntry(title: title, content: content), at: 0)
-        save()
+        storage.save(entries)
+    }
+
+    func update(_ entry: JournalEntry, title: String, content: String) {
+        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
+        entries[index].title = title
+        entries[index].content = content
+        storage.save(entries)
     }
 
     func toggleBookmark(_ entry: JournalEntry) {
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
         entries[index].isBookmarked.toggle()
-        save()
+        storage.save(entries)
     }
 
-    func delete(_ entry: JournalEntry) {
+    func confirmDelete() {
+        guard let entry = entryToDelete else { return }
         entries.removeAll { $0.id == entry.id }
-        save()
-    }
-
-    private func save() {
-        guard let data = try? JSONEncoder().encode(entries) else { return }
-        UserDefaults.standard.set(data, forKey: storageKey)
-    }
-
-    private func load() {
-        guard let data = UserDefaults.standard.data(forKey: storageKey),
-              let saved = try? JSONDecoder().decode([JournalEntry].self, from: data)
-        else { return }
-        entries = saved
+        entryToDelete = nil
+        storage.save(entries)
     }
 }

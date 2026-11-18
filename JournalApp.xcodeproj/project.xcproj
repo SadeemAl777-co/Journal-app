@@ -11,7 +11,7 @@
     ],
   },
   "files": [
-    { "path": "AppIcon .icon", "target-membership": [ "JournalApp/resources" ] },
+    { "path": "AppIcon  2.icon", "target-membership": [ "JournalApp/resources" ] },
     { "kind": "folder", "path": "JournalApp", "target-membership": [ "JournalApp" ] },
     {
       "kind": "group",

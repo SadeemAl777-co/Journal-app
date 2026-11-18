@@ -12,12 +12,3 @@ extension Font {
     static let captionM         = Font.system(size: 16, weight: .regular)
     static let captionS         = Font.system(size: 14, weight: .regular)
 }
-
-import SwiftUI
-
-extension Color {
-    static let appBackground = Color("Background")
-    static let appCard = Color("Card")
-    static let appPrimary = Color("Primary")
-    static let appDestructive = Color("Semantic")
-}

@@ -5,7 +5,7 @@ struct JournalCard: View {
     var onBookmark: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 Text(entry.title)
                     .font(.titleCard)
@@ -23,7 +23,7 @@ struct JournalCard: View {
                 .buttonStyle(.plain)
             }
 
-            Text(entry.date.formatted(date: .numeric, time: .omitted))
+            Text(entry.formattedDate)
                 .font(.captionM)
                 .foregroundStyle(Color.textSecondary)
 

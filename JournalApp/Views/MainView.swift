@@ -2,16 +2,14 @@ import SwiftUI
 
 struct MainView: View {
     @State private var viewModel = JournalViewModel()
-    @State private var searchText = ""
-    @State private var showEditor = false
-    @State private var entryToDelete: JournalEntry?
-    @State private var showDeleteAlert = false
 
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.entries.isEmpty {
+                if viewModel.hasNoEntries {
                     emptyState
+                } else if viewModel.hasNoSearchResults {
+                    ContentUnavailableView.search(text: viewModel.searchText)
                 } else {
                     entryList
                 }
@@ -19,14 +17,28 @@ struct MainView: View {
             .navigationTitle("Journal")
             .toolbar {
                 ToolbarItemGroup {
-                    Button("Filter", systemImage: "line.3.horizontal.decrease") { }
-                    Button("Add", systemImage: "plus") { showEditor = true }
+                    Menu("Filter", systemImage: "line.3.horizontal.decrease") {
+                        ForEach(JournalFilter.allCases) { option in
+                            Button(option.rawValue) {
+                                viewModel.toggleFilter(option)
+                            }
+                        }
+                    }
+                    Button("Add", systemImage: "plus") {
+                        viewModel.startAdding()
+                    }
                 }
             }
-            .searchable(text: $searchText, prompt: "Search")
-            .sheet(isPresented: $showEditor) {
+            .searchable(text: $viewModel.searchText, prompt: "Search")
+            .sheet(isPresented: $viewModel.isAddingEntry) {
                 JournalView { title, content in
                     viewModel.add(title: title, content: content)
+                }
+                .presentationDragIndicator(.visible)
+            }
+            .sheet(item: $viewModel.entryToEdit) { entry in
+                JournalView(entry: entry) { title, content in
+                    viewModel.update(entry, title: title, content: content)
                 }
                 .presentationDragIndicator(.visible)
             }
@@ -52,16 +64,21 @@ struct MainView: View {
 
     private var entryList: some View {
         List {
-            ForEach(viewModel.entries) { entry in
+            ForEach(viewModel.visibleEntries) { entry in
                 Section {
                     JournalCard(entry: entry) {
                         viewModel.toggleBookmark(entry)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewModel.startEditing(entry)
+                    }
                     .listRowBackground(Color.appCard)
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button("Delete", systemImage: "trash", role: .destructive) {
-                            entryToDelete = entry
-                            showDeleteAlert = true
+                        Button(role: .destructive) {
+                            viewModel.requestDelete(entry)
+                        } label: {
+                            Image(systemName: "trash")
                         }
                         .tint(Color.appDestructive)
                     }
@@ -69,12 +86,12 @@ struct MainView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .alert("Delete Journal?", isPresented: $showDeleteAlert, presenting: entryToDelete) { entry in
+        .alert("Delete Journal?", isPresented: $viewModel.isShowingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                viewModel.delete(entry)
+                viewModel.confirmDelete()
             }
-        } message: { _ in
+        } message: {
             Text("Are you sure you want to delete this journal?")
         }
     }

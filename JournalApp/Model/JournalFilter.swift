@@ -9,9 +9,12 @@ enum JournalFilter: String, CaseIterable, Identifiable {
     func apply(to entries: [JournalEntry]) -> [JournalEntry] {
         switch self {
         case .bookmark:
-            return entries.filter { $0.isBookmarked } + entries.filter { !$0.isBookmarked }
+            let newestFirst = entries.sorted { $0.date > $1.date }
+            return newestFirst.filter { $0.isBookmarked } + newestFirst.filter { !$0.isBookmarked }
         case .entryDate:
             return entries.sorted { $0.date > $1.date }
+            
+            
         }
     }
 }

@@ -33,6 +33,11 @@ struct JournalCard: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.appCard, in: RoundedRectangle(cornerRadius: 28))
+            
+            Text(entry.content)
+                .font(.bodyM)
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(5)
         }
     }
 }

@@ -29,5 +29,9 @@ class JournalEditorViewModel {
         } else {
             onClose()
         }
+        var canSave: Bool {
+            !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
     }
 }
